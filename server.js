@@ -4,21 +4,19 @@
 // CALL THE PACKAGES --------path------------
 var express = require('express'); // call express
 var app = express(); // define our app using express
-//var bodyParser = require('body-parser'); // get body-parser
-//var morgan = require('morgan'); // used to see requests
-//var mongoose = require('mongoose'); // for working w/ our database
-//var config = require('./config');
-
+var bodyParser = require('body-parser'); // get body-parser
+var mongoose = require('mongoose');
 var path = require('path');
-//var passport = require("passport");
+
+var Course = require('./app/course');
 
 //Connect to database
-//mongoose.connect(config.database);
+mongoose.connect('mongodb://localhost:27017/OnlineUniversityDB');
 
 // APP CONFIGURATION ---------------------
 // use body parser so we can grab information from POST requests
-//app.use(bodyParser.urlencoded({ extended: true }));
-//app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());
 
 // configure our app to handle CORS requests
 app.use(function(req, res, next) {
@@ -28,30 +26,83 @@ app.use(function(req, res, next) {
 	next();
 });
 
-// log all requests to the consoleBuild a RESTful Node API 59
-//app.use(morgan('dev'));
-//app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/public'));
 
-
-// ROUTES FOR OUR API
-// =============================
 // get an instance of the express router
-//var apiRouter = require('./app/routes/api')(app, express);
+var apiRouter = express.Router();
 
-// REGISTER OUR ROUTES -------------------------------
-// all of our routes will be prefixed with /api
-//app.use('/api', apiRouter);
+app.use('/api', apiRouter);
 
-//app.get('/404', function(req, res){
-//	res.sendFile(path.join(__dirname + '/public/views/404.html'));
-//	});
+apiRouter.route('/course')
+	.get(function(req,res){
+		Course.find(function(err,courses){
+			if (err) return res.send(err);
+			res.json(courses);
+		});
+	})
+
+	.post(function(req,res){
+		var course = new Course();
+
+		course.name = req.body.name;
+		course.category = req.body.category;
+		course.dateCreated = req.body.dateCreated;
+		course.description = req.body.description;
+
+		course.save(function(err){
+			if(err){
+				if(err.code == 11000)
+					return res.json({ success: false, message: 'duplicate entry'});
+				else
+				{
+					errCode = err.code;
+					return res.json({ success: false, message: 'err: ' + errCode});
+				}
+			}
+				res.json({ message: 'Course created!'})
+		});
+	});
+
+apiRouter.route('/course/:course_id')
+	.get(function(req,res){
+		Course.findById(req.params.course_id, function(err, course){
+			if (err) return res.send(err);
+			res.json(course);
+		});
+	})
+
+	.delete(function(req,res){
+		Course.remove({_id: req.params.course_id}, function(err,course){
+			if (err) return res.send(err);
+			res.json({message: "Successfully deleted the course."});
+		});
+	})
+
+	.put(function(req,res){
+		Course.findById(req.params.course_id, function(err,course){
+			if (err) return res.send(err);
+
+			//Update info only if new
+			if (req.body.name) course.name = req.body.name;
+			if (req.body.category) course.category = req.body.category;
+			if (req.body.dateCreated) course.dateCreated = req.body.dateCreated;
+			if (req.body.description) course.description = req.body.description;
+
+			//save updates
+			course.save(function(err) {
+				if (err) return res.send(err);
+
+				res.json({message: "Course updated!"});
+			});
+		});
+	});
 
 // basic route for the home page
 app.get('*', function(req, res) {
-	res.sendFile(path.join(__dirname + '/index.html'));
+	res.sendFile(path.join(__dirname + '/public/html/index.html'));
 	});
 
 // START THE SERVER
 // ===============================
-app.listen(3000);
-console.log('Application running on 3000');
+app.listen(80);
+console.log('Application running on 80');
