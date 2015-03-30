@@ -2,7 +2,8 @@
 angular.module('mainApp', [
   'ngResource',
   'ngRoute',
-  'ngAnimate'
+  'ngAnimate',
+  'ui.bootstrap'
   ])
 
 .config(['$resourceProvider', function($resourceProvider){
@@ -40,9 +41,10 @@ angular.module('mainApp', [
   return localCourseFactory;
 })
 
-//new user controller
-.controller('mainController', function(courseFactory){
+.controller('mainController', function(courseFactory, $scope, $modal, $log){
   var vm = this;
+
+  vm.items = ['item1', 'item2', 'item3'];
 
   courseFactory.all()
   .success(function(data){
@@ -59,14 +61,14 @@ angular.module('mainApp', [
     courseFactory.all()
     .success(function(data){
       vm.courses = data;
-  });
+    });
   }
 
   vm.addCourse = function(){
     console.log("Add Course.");
 
     var modalInstance = $modal.open({
-      templateURL: 'modal.html',
+      templateUrl: 'myModalContent.html',
       controller: 'modalInstanceCtrl',
       size: 'lg',
       resolve: {
@@ -76,11 +78,26 @@ angular.module('mainApp', [
       }
     });
 
-    modalInstance.result.then(function (selectedItem))
+    modalInstance.result.then(function (){
+      $scope.selected = "Message here";
+    }, function () {
+      $log.info('Modal dismissed at: ' + new Date());
+    });
   }
 
   vm.editCourse = function(course){
     console.log("Edit Course " + course.name);
   }
 
+})
+
+.controller('modalInstanceCtrl', function($scope, $modalInstance){
+
+  $scope.ok = function () {
+    $modalInstance.close();
+  };
+
+  $scope.cancel = function () {
+    $modalInstance.dismiss('cancel');
+  };
 });
