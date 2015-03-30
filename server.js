@@ -99,7 +99,7 @@ apiRouter.route('/course/:course_id')
 
 // basic route for the home page
 app.get('*', function(req, res) {
-	res.sendFile(path.join(__dirname + '/public/html/index.html'));
+	res.sendFile(path.join(__dirname + '/public/html/profile.html'));
 	});
 
 // START THE SERVER
