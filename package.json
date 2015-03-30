@@ -1,0 +1,8 @@
+{
+  "name": "OnlineUniversity",
+  "main": "server.js",
+  "dependencies": {
+    "express": "~4.10.3",
+    "mongoose": "~3.8.19"
+  }
+}
