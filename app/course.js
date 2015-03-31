@@ -6,7 +6,7 @@ var Schema = mongoose.Schema;
 var courseSchema = new Schema({
 	name: { type: String, required: true},
 	category: {type: String, required: true},
-	dateCreated: {type: Date, required: true},
+	dateCreated: {type: String, required: true},
 	description: {type: String, required: true}
 });
 

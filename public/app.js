@@ -36,6 +36,10 @@ angular.module('mainApp', [
 
   localCourseFactory.removeCourse = function(id){
     return $http.delete('/api/course/' + id);
+  };
+
+  localCourseFactory.editCourse = function(courseData){
+    return $http.put('/api/course/' + courseData._id, courseData);
   }
 
   return localCourseFactory;
@@ -44,7 +48,7 @@ angular.module('mainApp', [
 .controller('mainController', function(courseFactory, $scope, $modal, $log){
   var vm = this;
 
-  vm.items = ['item1', 'item2', 'item3'];
+  vm.tempCourse = {name : ""};
 
   courseFactory.all()
   .success(function(data){
@@ -53,33 +57,51 @@ angular.module('mainApp', [
 
   vm.removeCourse = function(course){
     console.log(course);
-    courseFactory.removeCourse(course._id)
-    .success(function(){
-      console.log("Deleted course.");
-    });
+    var check = window.confirm("Are you sure you want to delete?");
+    if (check == true) {
+      courseFactory.removeCourse(course._id)
+      .success(function(){
+        console.log("Deleted course.");
+      });
 
-    courseFactory.all()
-    .success(function(data){
-      vm.courses = data;
-    });
+      courseFactory.all()
+      .success(function(data){
+        vm.courses = data;
+      });
+    }
   }
 
   vm.addCourse = function(){
     console.log("Add Course.");
+    vm.tempCourse = {name: "", category: "", dateCreated: "", description: ""};
 
     var modalInstance = $modal.open({
       templateUrl: 'myModalContent.html',
       controller: 'modalInstanceCtrl',
       size: 'lg',
       resolve: {
-        courses: function () {
-          return $scope.courses;
+        tempCourse: function () {
+          return vm.tempCourse;
         }
       }
     });
 
-    modalInstance.result.then(function (){
-      $scope.selected = "Message here";
+    modalInstance.result.then(function (tempCourse){
+      vm.tempCourse.name = tempCourse.name;
+      vm.tempCourse.category = tempCourse.category;
+      vm.tempCourse.dateCreated = tempCourse.dateCreated;
+      vm.tempCourse.description = tempCourse.description;
+      console.log(vm.tempCourse);
+
+      courseFactory.create(vm.tempCourse)
+      .success(function(){
+        console.log("Added course.");
+      });
+
+      courseFactory.all()
+      .success(function(data){
+        vm.courses = data;
+      });
     }, function () {
       $log.info('Modal dismissed at: ' + new Date());
     });
@@ -87,14 +109,48 @@ angular.module('mainApp', [
 
   vm.editCourse = function(course){
     console.log("Edit Course " + course.name);
+    vm.tempCourse = {_id: course._id, name: course.name, category: course.category, dateCreated: course.dateCreated, description: course.description};
+
+    var modalInstance = $modal.open({
+      templateUrl: 'myModalContent.html',
+      controller: 'modalInstanceCtrl',
+      size: 'lg',
+      resolve: {
+        tempCourse: function () {
+          return vm.tempCourse;
+        }
+      }
+    });
+
+    modalInstance.result.then(function (tempCourse){
+      vm.tempCourse.name = tempCourse.name;
+      vm.tempCourse.category = tempCourse.category;
+      vm.tempCourse.dateCreated = tempCourse.dateCreated;
+      vm.tempCourse.description = tempCourse.description;
+      console.log(vm.tempCourse);
+
+      courseFactory.editCourse(vm.tempCourse)
+      .success(function(){
+        console.log("Added course.");
+      });
+
+      courseFactory.all()
+      .success(function(data){
+        vm.courses = data;
+      });
+    }, function () {
+      $log.info('Modal dismissed at: ' + new Date());
+    });
   }
 
 })
 
-.controller('modalInstanceCtrl', function($scope, $modalInstance){
+.controller('modalInstanceCtrl', function($scope, $modalInstance, tempCourse){
+
+  $scope.tempCourse = tempCourse;
 
   $scope.ok = function () {
-    $modalInstance.close();
+    $modalInstance.close(tempCourse);
   };
 
   $scope.cancel = function () {
