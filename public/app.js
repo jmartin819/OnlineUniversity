@@ -96,12 +96,12 @@ angular.module('mainApp', [
       courseFactory.create(vm.tempCourse)
       .success(function(){
         console.log("Added course.");
+        courseFactory.all()
+        .success(function(data){
+          vm.courses = data;
+        });
       });
 
-      courseFactory.all()
-      .success(function(data){
-        vm.courses = data;
-      });
     }, function () {
       $log.info('Modal dismissed at: ' + new Date());
     });
@@ -132,12 +132,12 @@ angular.module('mainApp', [
       courseFactory.editCourse(vm.tempCourse)
       .success(function(){
         console.log("Added course.");
+        courseFactory.all()
+        .success(function(data){
+          vm.courses = data;
+        });
       });
 
-      courseFactory.all()
-      .success(function(data){
-        vm.courses = data;
-      });
     }, function () {
       $log.info('Modal dismissed at: ' + new Date());
     });
